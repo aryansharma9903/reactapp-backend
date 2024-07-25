@@ -1,6 +1,7 @@
 const HttpError = require('../models/http-error');
 const uuid = require('uuid');
-//we have written all the logic related to the routes withtin the routes folder
+const { validationResult } = require('express-validator')
+const getCoord = require('../utils/location')
 //but the router logic is written seperately in controllers
 //so we will cut the logic written there and paste it here for each route.\
 let DUMMY_PLACES = [
@@ -72,13 +73,35 @@ const getPLacesByUserId =  (req, res, next) => {
 //for a get request, we were extracting data from the url using params
 //but for post request, we will extract data from body;
 //and to get data out of body we use body-parser
-const createPlace = (req, res, next) => {
-    const { title, description, coordinates, address, creator } = req.body;
+const createPlace = async (req, res, next) => {
+//here we have not implemented the input validators, whether the field exist or not
+//like we getting input with empty fields in title
+//so prevent this we can write our own logic to handle such cases and pass errors for rmpty fields
+//like if(title.trim().length === 0) -> if title does not exist
+//but this becomes cumbersome to execute for each value
+//instead we use a third party library
+//express-validators
+const errors = validationResult(req);
+if(!errors.isEmpty()){
+    console.log(errors);
+    //while working with async code nbtter to use next rather than throw
+    return next (new HttpError('Invalid inputs passed, pls check ur data', 422));
+}
+    const { title, description, address, creator } = req.body;
+    let coordinates;
+    try{
+    coordinates = await getCoord(address);
+    } catch(error) {
+        return next(error);
+    }
     const createdPlace = {
         //importing uuid package for giving unique id's
-        id: uuid(),
+        //id: uuid(),
         title,
         description,
+        //here we dont want to input the coordinates from the user
+        //but we need to convert the address input by user to coordinates
+        //using a REST API provided by google.
         location: coordinates,
         address,
         creator
@@ -90,6 +113,11 @@ const createPlace = (req, res, next) => {
 }
 
 const updatePlace = (req, res, next) => {
+const errors = validationResult(req);
+if(!errors.isEmpty()){
+    console.log(errors);
+    throw new HttpError('Invalid inputs passed, pls check ur data', 422);
+}
     const placeId = req.params.pid;
     const updatedPlace = DUMMY_PLACES.find((place) => {
         return place.id === placeId;
@@ -107,6 +135,9 @@ const updatePlace = (req, res, next) => {
 
 const deletePlace = (req, res, next) => {
     const placeId = req.params.pid;
+    if(!DUMMY_PLACES.find(p => p.id === placeId)){
+        throw new HttpError('Could not find a place for that id', 404);
+    }
     DUMMY_PLACES = DUMMY_PLACES.filter(p => p.id !== placeId);
     res.status(200).json({message: 'Deleted Place'});
 }

@@ -1,5 +1,6 @@
 //const uuid = require('uuid');
 const HttpError = require('../models/http-error');
+const {validationResult} = require('express-validator')
 const DUMMY_USERS = [
     {
         id:'u1',
@@ -17,7 +18,10 @@ const getUsers = (req ,res, next) => {
 }
 
 const signupUser = (req ,res, next) => {
-
+const error = validationResult(req);
+if(!error.isEmpty()){
+    throw new HttpError('the inputs are not desired, pls check your inputs', 422);
+}
     const {name, email, password} = req.body;
     const User = DUMMY_USERS.find((user) => {
         return user.email === email;
@@ -32,7 +36,7 @@ const signupUser = (req ,res, next) => {
         password: password
     }
     DUMMY_USERS.push(newUser);
-    res.status(201).json({users: DUMMY_USERS})}
+    res.status(201).json({user : User})}
 }
 const loginUser = (req ,res, next) => {
     const {email, password} = req.body;
