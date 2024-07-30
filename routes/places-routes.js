@@ -14,26 +14,24 @@ router.get('/:pid', placesControllers.getPlaceById);
 
 router.get('/user/:uid', placesControllers.getPLacesByUserId);
 
-router.post('/', 
-    [check('title')
+router.post('/', [check('title')
         .not()
         .isEmpty(),
-    check('description')
-        .isLength({min: 5}),
-    check('address')
+        check('description')
+        .isLength({ min: 5 }),
+        check('address')
         .not()
         .isEmpty()
-    ], 
+    ],
     placesControllers.createPlace);
 //the aboev and below routes are where i need to use express validators
-router.patch('/:pid', 
-    [check('title')
-        .not()
-        .isEmpty(),
+//express validators act as a middleware before calling the controller function
+router.patch('/:pid', [check('title')
+    .not()
+    .isEmpty(),
     check('description')
-        .isLength({min: 5}),
-    ]
-    ,placesControllers.updatePlace);
+    .isLength({ min: 5 }),
+], placesControllers.updatePlace);
 
 router.delete('/:pid', placesControllers.deletePlace);
 
