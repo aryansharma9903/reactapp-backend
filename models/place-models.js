@@ -26,8 +26,12 @@ const placeSchema = new Schema({
         }
     },
     creator: {
-        type: String,
-        required: true
+        // we want this creator to have a mongodb id
+        //and also we want a connection b/w creator and place
+        //so we use ref
+        type: mongoose.Types.ObjectId,
+        required: true,
+        ref: 'User'
     }
 })
 
